@@ -1,2 +1,3 @@
 # snowflake
-A Twitter snowflake algorithm simply implemented in Rust .
+
+A Twitter snowflake algorithm simply implemented in Rust.

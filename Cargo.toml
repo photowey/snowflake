@@ -1,0 +1,20 @@
+[package]
+name = "snowflakee"
+version = "0.2.1"
+edition = "2021"
+authors = ["photowey"]
+license = "Apache-2.0"
+documentation = ""
+repository = "https://github.com/photowey/snowflake"
+homepage = "https://github.com/photowey/snowflake"
+description = """
+A Twitter snowflake algorithm simply implemented in Rust.
+"""
+readme = "README.md"
+keywords = ["snowflake"]
+categories = ["algorithms"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static = "1.4"
