@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-use crate::generator::{Constants, Generator};
+use crate::generator::{Constants, Generator, SnowflakeGenerator};
+
+use super::*;
 
 #[test]
 fn test_bits() {
@@ -30,18 +32,39 @@ fn test_bits() {
 #[test]
 fn test_next_id() {
     // 122235238222008321
-    assert!(super::next_id().is_ok());
+    let rvt = next_id();
+    assert!(rvt.is_ok());
 }
 
 #[test]
-fn test_snowflake_next_id() {
+fn test_next_id_string() {
+    // 122256588529602560
+    let rvt = next_id_string();
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_generator_new_failed() {
+    let rvt = SnowflakeGenerator::new(32, 32);
+    assert!(rvt.is_err());
+}
+
+#[test]
+fn test_generator_new_ok() {
+    let rvt = SnowflakeGenerator::new(31, 31);
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_generator_builtin_ok() {
+    let rvt = SnowflakeGenerator::builtin();
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_generator_next_id() {
     // 122235451737247745
     // 122_235_451_737_247_745 -> 18
-    assert!(super::snowflake()
-        .lock()
-        .unwrap()
-        .as_ref()
-        .unwrap()
-        .next_id()
-        .is_ok());
+    let rvt = generator().lock().unwrap().as_ref().unwrap().next_id();
+    assert!(rvt.is_ok());
 }

@@ -16,12 +16,11 @@
 
 // ----------------------------------------------------------------
 
-use std::error::Error;
 use std::sync::{Arc, Mutex};
 
 use lazy_static::lazy_static;
 
-use crate::generator::{Generator, SnowflakeGenerator};
+use crate::generator::{Generator, SnowflakeError, SnowflakeGenerator};
 
 // ----------------------------------------------------------------
 
@@ -38,10 +37,10 @@ lazy_static! {
 
 // ----------------------------------------------------------------
 
-pub fn snowflake() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
+pub fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
     let mut instance = BUILT_IN_SNOWFLAKE.lock().unwrap();
     if instance.is_none() {
-        *instance = Some(SnowflakeGenerator::builtin());
+        *instance = Some(SnowflakeGenerator::builtin().unwrap());
     }
 
     Arc::clone(&BUILT_IN_SNOWFLAKE)
@@ -49,6 +48,10 @@ pub fn snowflake() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
 
 // ----------------------------------------------------------------
 
-pub fn next_id() -> Result<u64, Box<dyn Error>> {
-    snowflake().lock().unwrap().as_ref().unwrap().next_id()
+pub fn next_id() -> Result<u64, SnowflakeError> {
+    generator().lock().unwrap().as_ref().unwrap().next_id()
+}
+
+pub fn next_id_string() -> Result<String, SnowflakeError> {
+    next_id().map(|v| v.to_string()).map_err(|x| x)
 }
