@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+// ----------------------------------------------------------------
+
 use crate::generator::{Constants, Generator, SnowflakeGenerator};
 
 use super::*;
+
+// ----------------------------------------------------------------
 
 #[test]
 fn test_bits() {
@@ -26,7 +30,7 @@ fn test_bits() {
 
     assert_eq!(12, Constants::WORKER_ID_SHIFT);
     assert_eq!(17, Constants::CENTER_ID_SHIFT);
-    assert_eq!(22, Constants::TIMESTAMP_LEFT_SHIFT);
+    assert_eq!(22, Constants::TIMESTAMP_SHIFT);
 }
 
 #[test]
@@ -45,20 +49,20 @@ fn test_next_id_string() {
 
 #[test]
 fn test_generator_new_failed() {
-    let rvt = SnowflakeGenerator::new(32, 32);
-    assert!(rvt.is_err());
+    let gen = SnowflakeGenerator::new(32, 32);
+    assert!(gen.is_err());
 }
 
 #[test]
 fn test_generator_new_ok() {
-    let rvt = SnowflakeGenerator::new(31, 31);
-    assert!(rvt.is_ok());
+    let gen = SnowflakeGenerator::new(31, 31);
+    assert!(gen.is_ok());
 }
 
 #[test]
 fn test_generator_builtin_ok() {
-    let rvt = SnowflakeGenerator::builtin();
-    assert!(rvt.is_ok());
+    let gen = SnowflakeGenerator::builtin();
+    assert!(gen.is_ok());
 }
 
 #[test]
@@ -68,3 +72,16 @@ fn test_generator_next_id() {
     let rvt = generator().lock().unwrap().as_ref().unwrap().next_id();
     assert!(rvt.is_ok());
 }
+
+#[test]
+fn test_custom_new_next_id() {
+    let center_id = 16;
+    let worker_id = 16;
+
+    let gen = SnowflakeGenerator::new(center_id, worker_id);
+    assert!(gen.is_ok());
+    let rvt = gen.unwrap().next_id();
+    assert!(rvt.is_ok());
+}
+
+// ----------------------------------------------------------------

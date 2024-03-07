@@ -24,7 +24,8 @@ use crate::generator::{Generator, SnowflakeError, SnowflakeGenerator};
 
 // ----------------------------------------------------------------
 
-mod generator;
+pub mod generator;
+pub mod infras;
 #[cfg(test)]
 mod tests;
 
@@ -37,7 +38,7 @@ lazy_static! {
 
 // ----------------------------------------------------------------
 
-pub fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
+fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
     let mut instance = BUILT_IN_SNOWFLAKE.lock().unwrap();
     if instance.is_none() {
         *instance = Some(SnowflakeGenerator::builtin().unwrap());
@@ -48,10 +49,48 @@ pub fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
 
 // ----------------------------------------------------------------
 
+/// [`next_id`]
+///
+/// Generates and returns a unique ID based on the [`Generator::next_id`] function.
+///
+/// ## Return
+///
+/// Returns a `Result<u64, SnowflakeError>` where:
+///
+/// - `Ok(u64)`: Represents a successfully generated unique ID.
+/// - `Err(SnowflakeError)`: Indicates an error occurred, such as the system clock moved backwards.
+///
+/// # Examples
+///
+/// ```rust
+/// use snowflaker::next_id;
+///
+/// let rvt = next_id();
+/// assert!(rvt.is_ok());
+/// ```
 pub fn next_id() -> Result<u64, SnowflakeError> {
     generator().lock().unwrap().as_ref().unwrap().next_id()
 }
 
+/// [`next_id_string`]
+///
+/// Generates and returns a unique String ID.
+///
+/// ## Return
+///
+/// Returns a `Result<u64, SnowflakeError>` where:
+///
+/// - `Ok(u64)`: Represents a successfully generated unique ID.
+/// - `Err(SnowflakeError)`: Indicates an error occurred, such as the system clock moved backwards.
+///
+/// # Examples
+///
+/// ```rust
+/// use snowflaker::next_id_string;
+///
+/// let rvt = next_id_string();
+/// assert!(rvt.is_ok());
+/// ```
 pub fn next_id_string() -> Result<String, SnowflakeError> {
-    next_id().map(|v| v.to_string()).map_err(|x| x)
+    next_id().map(|v| v.to_string())
 }

@@ -1,10 +1,10 @@
 [package]
-name = "snowflakee"
+name = "snowflaker"
 version = "0.1.0"
 edition = "2021"
 authors = ["photowey"]
 license = "Apache-2.0"
-documentation = ""
+documentation = "https://docs.rs/snowflaker"
 repository = "https://github.com/photowey/snowflake"
 homepage = "https://github.com/photowey/snowflake"
 description = """
@@ -18,3 +18,4 @@ categories = ["algorithms"]
 
 [dependencies]
 lazy_static = "1.4"
+chronounit = "0.2"

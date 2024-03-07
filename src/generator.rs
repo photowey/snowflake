@@ -22,10 +22,12 @@ use std::fmt::{Display, Formatter};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-// ----------------------------------------------------------------
+use chronounit::TimeUnit;
+
 // ----------------------------------------------------------------
 
-#[derive(Debug)]
+/// [`SnowflakeError`] Snowflake custom enum error.
+#[derive(Debug, Clone)]
 pub enum SnowflakeError {
     CenterIdInvalid,
     WorkerIdInvalid,
@@ -50,37 +52,64 @@ impl Error for SnowflakeError {}
 
 // ----------------------------------------------------------------
 
+/// [`Constants`] Generator common constants.
 pub struct Constants;
 
 impl Constants {
+    /// [`EPOCH`] `2023-04-05 06:07:08`
     pub const EPOCH: u64 = 1680646028000; // 2023-04-05 06:07:08
 
+    /// [`DATA_CENTER_ID_BITS`] data-center bits: 5
     pub const DATA_CENTER_ID_BITS: u64 = 5;
+    /// [`WORKER_ID_BITS`] worker bits: 5
     pub const WORKER_ID_BITS: u64 = 5;
+
+    /// [`SEQUENCE_BITS`] sequence bits: 12
     pub const SEQUENCE_BITS: u64 = 12;
 
+    /// [`MAX_DATA_CENTER_ID`] max data-center ID: 31
     pub const MAX_DATA_CENTER_ID: u64 = !(!0 << Constants::DATA_CENTER_ID_BITS);
+    /// [`SEQUENCE_MASK`] max worker ID: 31
     pub const MAX_WORKER_ID: u64 = !(!0 << Constants::WORKER_ID_BITS);
+
+    /// [`SEQUENCE_MASK`] sequence mask: 4095
     pub const SEQUENCE_MASK: u64 = !(!0 << Constants::SEQUENCE_BITS);
 
+    /// [`WORKER_ID_SHIFT`] worker ID shift: 12
     pub const WORKER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS;
+    /// [`CENTER_ID_SHIFT`] center ID shift: 17
     pub const CENTER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS + Constants::WORKER_ID_BITS;
-    pub const TIMESTAMP_LEFT_SHIFT: u64 =
+
+    /// [`TIMESTAMP_SHIFT`] timestamp left shift: 22
+    pub const TIMESTAMP_SHIFT: u64 =
         Constants::DATA_CENTER_ID_BITS + Constants::WORKER_ID_BITS + Constants::SEQUENCE_BITS;
+
+    // ----------------------------------------------------------------
+
+    /// [`DEFAULT_DATA_CENTER_ID`] default data-center ID: 1
+    pub const DEFAULT_DATA_CENTER_ID: u64 = 1;
+
+    /// [`DEFAULT_WORKER_ID`] default worker ID: 1
+    pub const DEFAULT_WORKER_ID: u64 = 1;
 }
 
 // ----------------------------------------------------------------
 
+/// [`Generator`] Unique ID generator trait
 pub trait Generator {
+    /// [`next_id`] Generate next ID.
     fn next_id(&self) -> Result<u64, SnowflakeError>;
 
+    /// [`time_gen`] Get current timestamp.
     fn time_gen() -> Result<u64, SnowflakeError>;
 
+    /// [`til_next_millis`] Get next timestamp.
     fn til_next_millis(last_timestamp: u64) -> Result<u64, SnowflakeError>;
 }
 
 // ----------------------------------------------------------------
 
+/// [`SnowflakeGenerator`] The builtin impl of [`Generator`]
 pub struct SnowflakeGenerator {
     center_id: u64,
     worker_id: u64,
@@ -89,9 +118,55 @@ pub struct SnowflakeGenerator {
 }
 
 impl SnowflakeGenerator {
+    /// [`builtin`]
+    ///
+    /// Returns a new instance of [`SnowflakeGenerator`] with built-in defaults.
+    ///
+    /// This function, `builtin`, instantiates a `SnowflakeGenerator` using the predefined constants for
+    /// data-center ID and worker ID. These constants are [`Constants::DEFAULT_DATA_CENTER_ID`] and
+    /// [`Constants::DEFAULT_WORKER_ID`] respectively.
+    ///
+    /// The return type is a `Result` where the success variant contains the initialized
+    /// `Self` (a [`SnowflakeGenerator`]) and the error variant contains a [`SnowflakeError`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use snowflaker::generator::SnowflakeGenerator;
+    ///
+    /// let gen = SnowflakeGenerator::builtin();
+    /// assert!(gen.is_ok());
+    /// ```
     pub fn builtin() -> Result<Self, SnowflakeError> {
-        SnowflakeGenerator::new(1, 1)
+        SnowflakeGenerator::new(
+            Constants::DEFAULT_DATA_CENTER_ID,
+            Constants::DEFAULT_WORKER_ID,
+        )
     }
+
+    /// [`new`]
+    ///
+    /// Constructs a new [`SnowflakeGenerator`] instance.
+    ///
+    /// # Arguments
+    /// - `center_id`: An identifier for the data-center, represented as a `u64`. It must be within the defined maximum limit.
+    /// - `worker_id`: An identifier for the worker node within the data-center, also represented as a `u64`. This too must not exceed its predefined maximum value.
+
+    /// # Returns
+    /// - `Ok(Self)`: If both `center_id` and `worker_id` are valid, returns a new [`SnowflakeGenerator`] instance.
+    /// - `Err(SnowflakeError)`: If either `center_id` or `worker_id` is invalid, returns an error.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use snowflaker::generator::SnowflakeGenerator;
+    ///
+    /// let gen = SnowflakeGenerator::new(31, 31);
+    /// assert!(gen.is_ok());
+    ///
+    /// let gen = SnowflakeGenerator::new(32, 32);
+    /// assert!(gen.is_err());
+    /// ```
     pub fn new(center_id: u64, worker_id: u64) -> Result<Self, SnowflakeError> {
         if center_id > Constants::MAX_DATA_CENTER_ID {
             return Err(SnowflakeError::CenterIdInvalid);
@@ -111,38 +186,67 @@ impl SnowflakeGenerator {
 }
 
 impl Generator for SnowflakeGenerator {
+    /// [`next_id`]
+    ///
+    /// Generates and returns a unique ID based on the
+    /// current timestamp, data-center ID, worker ID, and an incrementing sequence number.
+    /// It ensures that IDs are strictly increasing and handles potential clock drift or time going backwards.
+    ///
+    /// ## Return
+    ///
+    /// Returns a `Result<u64, SnowflakeError>` where:
+    ///
+    /// - `Ok(u64)`: Represents a successfully generated unique ID.
+    /// - `Err(SnowflakeError)`: Indicates an error occurred, such as the system clock moved backwards.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use snowflaker::generator::{Generator, SnowflakeGenerator};
+    ///
+    /// let gen = SnowflakeGenerator::new(31, 31);
+    /// let rvt = gen.unwrap().next_id();
+    /// assert!(rvt.is_ok());
+    /// ```
     fn next_id(&self) -> Result<u64, SnowflakeError> {
         let mut timestamp = Self::time_gen().unwrap();
+        let last_timestamp = self.last_timestamp.load(Ordering::Relaxed);
 
-        loop {
-            let last_timestamp = self.last_timestamp.load(Ordering::Relaxed);
+        if timestamp < last_timestamp {
+            let delta = last_timestamp - timestamp;
+            if delta <= 1 << 3 {
+                TimeUnit::Milliseconds.sleep(delta << 1);
+                timestamp = Self::time_gen().unwrap();
 
-            if timestamp < last_timestamp {
-                timestamp = last_timestamp;
+                if timestamp < last_timestamp {
+                    return Err(SnowflakeError::ClockMovedBackwards);
+                }
             }
-
-            // TODO ?
-            if timestamp != last_timestamp {
-                self.sequence.store(0, Ordering::Relaxed);
-            }
-
-            let sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
-
-            if sequence <= Constants::SEQUENCE_MASK {
-                let id = ((timestamp - Constants::EPOCH) << Constants::TIMESTAMP_LEFT_SHIFT)
-                    | (self.center_id << Constants::CENTER_ID_SHIFT)
-                    | (self.worker_id << Constants::WORKER_ID_SHIFT)
-                    | sequence;
-
-                self.last_timestamp.store(timestamp, Ordering::Relaxed);
-
-                return Ok(id);
-            }
-
-            timestamp = Self::til_next_millis(timestamp).unwrap();
         }
+
+        let mut sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
+
+        if timestamp == last_timestamp {
+            sequence = (sequence + 1) & Constants::SEQUENCE_MASK;
+            if sequence == 0 {
+                timestamp = Self::til_next_millis(timestamp).unwrap();
+            }
+        } else {
+            sequence &= Constants::SEQUENCE_MASK;
+        }
+
+        self.sequence.store(sequence, Ordering::Relaxed);
+        self.last_timestamp.store(timestamp, Ordering::Relaxed);
+
+        let id = ((timestamp - Constants::EPOCH) << Constants::TIMESTAMP_SHIFT)
+            | (self.center_id << Constants::CENTER_ID_SHIFT)
+            | (self.worker_id << Constants::WORKER_ID_SHIFT)
+            | sequence;
+
+        Ok(id)
     }
 
+    /// [`time_gen`] get current timestamp
     fn time_gen() -> Result<u64, SnowflakeError> {
         match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(now) => Ok(now.as_millis() as u64),
@@ -150,6 +254,7 @@ impl Generator for SnowflakeGenerator {
         }
     }
 
+    /// [`til_next_millis`] get next timestamp
     fn til_next_millis(last_timestamp: u64) -> Result<u64, SnowflakeError> {
         let mut next = Self::time_gen().unwrap();
         while next <= last_timestamp {
