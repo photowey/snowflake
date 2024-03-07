@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-use crate::{Constants, BUILT_IN_SNOWFLAKE};
+use crate::generator::{Constants, Generator};
 
 #[test]
-fn test_id() {
+fn test_bits() {
     assert_eq!(31, Constants::MAX_DATA_CENTER_ID);
     assert_eq!(31, Constants::MAX_WORKER_ID);
     assert_eq!(4095, Constants::SEQUENCE_MASK);
@@ -29,9 +29,19 @@ fn test_id() {
 
 #[test]
 fn test_next_id() {
-    for _ in 0..10 {
-        // 122066891375251465
-        // 122_066_891_375_251_465 -> 18
-        println!("{}", BUILT_IN_SNOWFLAKE.lock().unwrap().next_id().unwrap());
-    }
+    // 122235238222008321
+    assert!(super::next_id().is_ok());
+}
+
+#[test]
+fn test_snowflake_next_id() {
+    // 122235451737247745
+    // 122_235_451_737_247_745 -> 18
+    assert!(super::snowflake()
+        .lock()
+        .unwrap()
+        .as_ref()
+        .unwrap()
+        .next_id()
+        .is_ok());
 }

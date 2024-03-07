@@ -17,120 +17,38 @@
 // ----------------------------------------------------------------
 
 use std::error::Error;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex};
 
 use lazy_static::lazy_static;
 
+use crate::generator::{Generator, SnowflakeGenerator};
+
 // ----------------------------------------------------------------
 
+mod generator;
 #[cfg(test)]
 mod tests;
 
 // ----------------------------------------------------------------
 
-pub struct Constants;
-
-impl Constants {
-    pub const EPOCH: u64 = 1680646028000; // 2023-04-05 06:07:08
-
-    pub const DATA_CENTER_ID_BITS: u64 = 5;
-    pub const WORKER_ID_BITS: u64 = 5;
-    pub const SEQUENCE_BITS: u64 = 12;
-
-    pub const MAX_DATA_CENTER_ID: u64 = !(!0 << Constants::DATA_CENTER_ID_BITS);
-    pub const MAX_WORKER_ID: u64 = !(!0 << Constants::WORKER_ID_BITS);
-    pub const SEQUENCE_MASK: u64 = !(!0 << Constants::SEQUENCE_BITS);
-
-    pub const WORKER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS;
-    pub const CENTER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS + Constants::WORKER_ID_BITS;
-    pub const TIMESTAMP_LEFT_SHIFT: u64 =
-        Constants::DATA_CENTER_ID_BITS + Constants::WORKER_ID_BITS + Constants::SEQUENCE_BITS;
-}
-
-// ----------------------------------------------------------------
-
 lazy_static! {
-    // TODO center_id/worker_id ?
-    static ref BUILT_IN_SNOWFLAKE: Mutex<Snowflake> = Mutex::new(Snowflake::new(1, 1));
+    static ref BUILT_IN_SNOWFLAKE: Arc<Mutex<Option<SnowflakeGenerator>>> =
+        Arc::new(Mutex::new(None));
 }
 
 // ----------------------------------------------------------------
 
-pub struct Snowflake {
-    center_id: u64,
-    worker_id: u64,
-    sequence: AtomicU64,
-    last_timestamp: AtomicU64,
+pub fn snowflake() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
+    let mut instance = BUILT_IN_SNOWFLAKE.lock().unwrap();
+    if instance.is_none() {
+        *instance = Some(SnowflakeGenerator::builtin());
+    }
+
+    Arc::clone(&BUILT_IN_SNOWFLAKE)
 }
 
-impl Snowflake {
-    pub fn new(center_id: u64, worker_id: u64) -> Self {
-        assert!(
-            center_id <= Constants::MAX_DATA_CENTER_ID,
-            "Data Center ID out of range"
-        );
-        assert!(
-            worker_id <= Constants::MAX_WORKER_ID,
-            "Worker ID out of range"
-        );
+// ----------------------------------------------------------------
 
-        Snowflake {
-            center_id,
-            worker_id,
-            sequence: AtomicU64::new(0),
-            last_timestamp: AtomicU64::new(0),
-        }
-    }
-
-    pub fn next_id(&self) -> Result<u64, Box<dyn Error>> {
-        let mut timestamp = Self::try_time_gen().unwrap();
-
-        loop {
-            let last_timestamp = self.last_timestamp.load(Ordering::Relaxed);
-
-            if timestamp < last_timestamp {
-                timestamp = last_timestamp;
-            }
-
-            // TODO ?
-            if timestamp != last_timestamp {
-                self.sequence.store(0, Ordering::Relaxed);
-            }
-
-            let sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
-
-            if sequence <= Constants::SEQUENCE_MASK {
-                let id = ((timestamp - Constants::EPOCH) << Constants::TIMESTAMP_LEFT_SHIFT)
-                    | (self.center_id << Constants::CENTER_ID_SHIFT)
-                    | (self.worker_id << Constants::WORKER_ID_SHIFT)
-                    | sequence;
-
-                self.last_timestamp.store(timestamp, Ordering::Relaxed);
-
-                return Ok(id);
-            }
-
-            timestamp = Self::try_next_millis(timestamp).unwrap();
-        }
-    }
-
-    fn try_time_gen() -> Result<u64, Box<dyn Error>> {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("SystemTime before UNIX EPOCH!")
-            .as_millis() as u64;
-
-        Ok(now)
-    }
-
-    fn try_next_millis(last_timestamp: u64) -> Result<u64, Box<dyn Error>> {
-        let mut next = Self::try_time_gen().unwrap();
-        while next <= last_timestamp {
-            next = Self::try_time_gen().unwrap();
-        }
-
-        Ok(next)
-    }
+pub fn next_id() -> Result<u64, Box<dyn Error>> {
+    snowflake().lock().unwrap().as_ref().unwrap().next_id()
 }
