@@ -14,24 +14,74 @@
  * limitations under the License.
  */
 
-use crate::{Constants, BUILT_IN_SNOWFLAKE};
+// ----------------------------------------------------------------
+
+use crate::generator::{Constants, Generator, SnowflakeGenerator};
+
+use super::*;
+
+// ----------------------------------------------------------------
 
 #[test]
-fn test_id() {
+fn test_bits() {
     assert_eq!(31, Constants::MAX_DATA_CENTER_ID);
     assert_eq!(31, Constants::MAX_WORKER_ID);
     assert_eq!(4095, Constants::SEQUENCE_MASK);
 
     assert_eq!(12, Constants::WORKER_ID_SHIFT);
     assert_eq!(17, Constants::CENTER_ID_SHIFT);
-    assert_eq!(22, Constants::TIMESTAMP_LEFT_SHIFT);
+    assert_eq!(22, Constants::TIMESTAMP_SHIFT);
 }
 
 #[test]
 fn test_next_id() {
-    for _ in 0..10 {
-        // 122066891375251465
-        // 122_066_891_375_251_465 -> 18
-        println!("{}", BUILT_IN_SNOWFLAKE.lock().unwrap().next_id().unwrap());
-    }
+    // 122235238222008321
+    let rvt = next_id();
+    assert!(rvt.is_ok());
 }
+
+#[test]
+fn test_next_id_string() {
+    // 122256588529602560
+    let rvt = next_id_string();
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_generator_new_failed() {
+    let gen = SnowflakeGenerator::new(32, 32);
+    assert!(gen.is_err());
+}
+
+#[test]
+fn test_generator_new_ok() {
+    let gen = SnowflakeGenerator::new(31, 31);
+    assert!(gen.is_ok());
+}
+
+#[test]
+fn test_generator_builtin_ok() {
+    let gen = SnowflakeGenerator::builtin();
+    assert!(gen.is_ok());
+}
+
+#[test]
+fn test_generator_next_id() {
+    // 122235451737247745
+    // 122_235_451_737_247_745 -> 18
+    let rvt = generator().lock().unwrap().as_ref().unwrap().next_id();
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_custom_new_next_id() {
+    let center_id = 16;
+    let worker_id = 16;
+
+    let gen = SnowflakeGenerator::new(center_id, worker_id);
+    assert!(gen.is_ok());
+    let rvt = gen.unwrap().next_id();
+    assert!(rvt.is_ok());
+}
+
+// ----------------------------------------------------------------
