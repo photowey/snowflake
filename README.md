@@ -82,7 +82,41 @@ assert!(rvt.is_ok());
 
 -- -
 
-### 2.3.`Custom`
+### 2.3.`Macros`
+
+- `@since 0.3.0`
+
+#### 2.3.1.`snowflake_builtin`
+
+```rust
+let rvt = snowflake_builtin!();
+assert!(rvt.is_ok());
+```
+
+#### 2.3.2.`snowflake_builtin_string`
+
+```rust
+let rvt = snowflake_builtin_string!();
+assert!(rvt.is_ok());
+```
+
+#### 2.3.3.`snowflake_dynamic`
+
+```rust
+let rvt = snowflake_dynamic!();
+assert!(rvt.is_ok());
+```
+
+#### 2.3.4.`snowflake_dynamic_string`
+
+```rust
+let rvt = snowflake_dynamic_string!();
+assert!(rvt.is_ok());
+```
+
+-- -
+
+### 2.4.`Custom`
 
 - `data-center` `ID`
 - `worker` `ID`
