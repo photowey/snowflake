@@ -91,11 +91,27 @@ fn test_hash_base() {
     assert_eq!(31, hashcode::HASH_BASE);
 }
 
+// ---------------------------------------------------------------- macros
+
+#[test]
+fn test_macro_snowflake_builtin() {
+    let rvt = snowflake_builtin!();
+    assert!(rvt.is_ok());
+}
+
+#[test]
+fn test_macro_snowflake_builtin_string() {
+    let rvt = snowflake_builtin_string!();
+    assert!(rvt.is_ok());
+}
+
 // ----------------------------------------------------------------
 
 #[cfg(test)]
 #[cfg(feature = "dynamic")]
 mod feature_dynamic_tests {
+    // @since 0.3.0
+    use crate::{dynamic_next_id, dynamic_next_id_string};
     use crate::generator::{Constants, Generator, SnowflakeGenerator};
     use crate::infras;
 
@@ -119,4 +135,31 @@ mod feature_dynamic_tests {
         let rvt = gen.unwrap().next_id();
         assert!(rvt.is_ok());
     }
+
+    #[test]
+    fn test_dynamic_next_id() {
+        let rvt = dynamic_next_id();
+        assert!(rvt.is_ok());
+    }
+
+    #[test]
+    fn test_dynamic_next_id_string() {
+        let rvt = dynamic_next_id_string();
+        assert!(rvt.is_ok());
+    }
+
+    // ---------------------------------------------------------------- macros
+
+    #[test]
+    fn test_macro_snowflake_dynamic() {
+        let rvt = snowflake_dynamic!();
+        assert!(rvt.is_ok());
+    }
+
+    #[test]
+    fn test_macro_snowflake_dynamic_string() {
+        let rvt = snowflake_dynamic_string!();
+        assert!(rvt.is_ok());
+    }
 }
+

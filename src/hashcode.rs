@@ -21,8 +21,6 @@ pub const HASH_BASE: u64 = (1 << 5) - 1;
 
 // ----------------------------------------------------------------
 
-/// [`HashCode`]
-///
 /// Defines a function to compute a hash-code for types.
 ///
 /// Implementors of this trait can produce a consistent 64-bit hash-value that
@@ -30,8 +28,6 @@ pub const HASH_BASE: u64 = (1 << 5) - 1;
 ///
 /// @since 0.2.0
 pub trait HashCode {
-    /// [`hashcode`]
-    ///
     /// Generates and returns a hash-value based on the contents of `self`.
     ///
     /// # Returns
@@ -42,7 +38,6 @@ pub trait HashCode {
 
 /// Implement the [`HashCode`] trait for the [`String`] type.
 impl HashCode for String {
-    /// [`hashcode`]
     fn hashcode(&self) -> u64 {
         let mut hash: u64 = 0;
         for ch in self.chars() {
