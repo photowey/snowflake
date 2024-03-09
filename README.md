@@ -12,11 +12,11 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-snowflaker = "0.2"
+snowflaker = "0.3"
 
 # Or
 # @see SnowflakeGenerator::dynamic()
-snowflaker = { version = "0.2", features = ["dynamic"] }
+snowflaker = { version = "0.3", features = ["dynamic"] }
 ```
 
 -- -
