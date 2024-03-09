@@ -27,6 +27,3 @@ ifcfg = "0.1"
 
 [features]
 dynamic = []
-
-[package.metadata.rustfmt]
-skip = ["Cargo.lock", "README.md"]

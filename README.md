@@ -43,7 +43,7 @@ assert!(gen.is_err());
 
 #### 2.1.3.`dynamic`
 
-> `@since 0.2.0`
+- `@since 0.2.0`
 
 ```toml
 [dependencies]
@@ -53,7 +53,6 @@ snowflaker = { version = "${version}", features = ["dynamic"] }
 ```rust
 let gen = SnowflakeGenerator::dynamic();
 assert!(gen.is_ok());
-"dynamic"
 
 let rvt = gen.unwrap().next_id();
 assert!(rvt.is_ok());
@@ -79,8 +78,8 @@ assert!(rvt.is_ok());
 
 ### 2.3.`Custom`
 
-> - `data-center` `ID`
-> - `worker` `ID`
+- `data-center` `ID`
+- `worker` `ID`
 
 ```rust
 let center_id = 16;
