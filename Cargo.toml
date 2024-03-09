@@ -1,15 +1,19 @@
 [package]
 name = "snowflaker"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-authors = ["photowey"]
+
+authors = ["photowey <photowey@gmail.com>"]
 license = "Apache-2.0"
+
 documentation = "https://docs.rs/snowflaker"
 repository = "https://github.com/photowey/snowflake"
 homepage = "https://github.com/photowey/snowflake"
+
 description = """
 A Twitter snowflake algorithm simply implemented in Rust.
 """
+
 readme = "README.md"
 keywords = ["snowflake"]
 categories = ["algorithms"]
@@ -19,3 +23,7 @@ categories = ["algorithms"]
 [dependencies]
 lazy_static = "1.4"
 chronounit = "0.2"
+ifcfg = "0.1"
+
+[features]
+dynamic = []

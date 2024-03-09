@@ -85,3 +85,38 @@ fn test_custom_new_next_id() {
 }
 
 // ----------------------------------------------------------------
+
+#[test]
+fn test_hash_base() {
+    assert_eq!(31, hashcode::HASH_BASE);
+}
+
+// ----------------------------------------------------------------
+
+#[cfg(test)]
+#[cfg(feature = "dynamic")]
+mod feature_dynamic_tests {
+    use crate::generator::{Constants, Generator, SnowflakeGenerator};
+    use crate::infras;
+
+    #[test]
+    fn test_try_get_data_center_id() {
+        let center_id = infras::try_get_data_center_id();
+        assert!(center_id <= Constants::MAX_DATA_CENTER_ID);
+    }
+
+    #[test]
+    fn test_try_get_worker_id() {
+        let center_id = infras::try_get_data_center_id();
+        let worker_id = infras::try_get_worker_id(center_id);
+        assert!(worker_id <= Constants::MAX_WORKER_ID);
+    }
+
+    #[test]
+    fn test_generator_dynamic() {
+        let gen = SnowflakeGenerator::dynamic();
+        assert!(gen.is_ok());
+        let rvt = gen.unwrap().next_id();
+        assert!(rvt.is_ok());
+    }
+}

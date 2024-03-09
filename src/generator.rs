@@ -24,6 +24,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use chronounit::TimeUnit;
 
+#[cfg(feature = "dynamic")]
+use crate::infras;
+
+// ----------------------------------------------------------------
+
 // ----------------------------------------------------------------
 
 /// [`SnowflakeError`] Snowflake custom enum error.
@@ -142,6 +147,44 @@ impl SnowflakeGenerator {
             Constants::DEFAULT_DATA_CENTER_ID,
             Constants::DEFAULT_WORKER_ID,
         )
+    }
+
+    /// [`dynamic`]
+    ///
+    /// Creates a new [`SnowflakeGenerator`] instance with `dynamic` parameters.
+    ///
+    /// This function is available when the [`dynamic`] feature is enabled.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`SnowflakeError`] if the data-center ID or worker ID invalid.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust
+    /// use snowflaker::generator::{Generator, SnowflakeGenerator};
+    ///
+    /// let gen = SnowflakeGenerator::dynamic();
+    /// assert!(gen.is_ok());
+    /// let rvt = gen.unwrap().next_id();
+    /// assert!(rvt.is_ok());
+    /// ```
+    ///
+    /// # Version
+    ///
+    /// This function was introduced in version `0.2.0` of the crate.
+    ///
+    /// # Notes
+    ///
+    /// This function retrieves the data-center ID and worker ID dynamically from the network interface(`non-loopback `).
+    ///
+    /// @since 0.2.0
+    #[cfg(feature = "dynamic")]
+    pub fn dynamic() -> Result<Self, SnowflakeError> {
+        let center_id = infras::try_get_data_center_id();
+        let worker_id = infras::try_get_worker_id(center_id);
+
+        SnowflakeGenerator::new(center_id, worker_id)
     }
 
     /// [`new`]
