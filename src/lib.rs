@@ -25,7 +25,11 @@ use crate::generator::{Generator, SnowflakeError, SnowflakeGenerator};
 // ----------------------------------------------------------------
 
 pub mod generator;
+
+#[cfg(feature = "dynamic")]
 pub mod infras;
+
+mod hashcode;
 #[cfg(test)]
 mod tests;
 

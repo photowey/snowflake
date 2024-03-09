@@ -12,7 +12,11 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-snowflaker = "0.1"
+snowflaker = "0.2"
+
+# Or
+# @see SnowflakeGenerator::dynamic()
+snowflaker = { version = "0.2", features = ["dynamic"] }
 ```
 
 ## 2.`APIs`
@@ -35,6 +39,18 @@ assert!(gen.is_ok());
 
 let gen = SnowflakeGenerator::new(32, 32);
 assert!(gen.is_err());
+```
+
+### 2.3.`dynamic`
+
+> `@since 0.2.0`
+
+```rust
+let gen = SnowflakeGenerator::dynamic();
+assert!(gen.is_ok());
+
+let rvt = gen.unwrap().next_id();
+assert!(rvt.is_ok());
 ```
 
 ### 2.2.`Functions`
@@ -70,6 +86,12 @@ let rvt = gen.unwrap().next_id();
 assert!(rvt.is_ok());
 ```
 
-### 2.4.`Next`
+## 3.`Test`
 
-> Dynamically calculate `center_id` and `worker_id` by`local-interface` and process `PID`
+### 3.1.`cargo test`
+
+```shell
+$ cargo test --features "dynamic" -- --show-output
+$ cargo test --features "dynamic"
+```
+
