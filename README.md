@@ -41,13 +41,19 @@ let gen = SnowflakeGenerator::new(32, 32);
 assert!(gen.is_err());
 ```
 
-### 2.3.`dynamic`
+#### 2.1.3.`dynamic`
 
 > `@since 0.2.0`
+
+```toml
+[dependencies]
+snowflaker = { version = "${version}", features = ["dynamic"] }
+```
 
 ```rust
 let gen = SnowflakeGenerator::dynamic();
 assert!(gen.is_ok());
+"dynamic"
 
 let rvt = gen.unwrap().next_id();
 assert!(rvt.is_ok());
@@ -93,5 +99,13 @@ assert!(rvt.is_ok());
 ```shell
 $ cargo test --features "dynamic" -- --show-output
 $ cargo test --features "dynamic"
+```
+
+## 4.`Docs`
+
+### 4.1.`features`
+
+```shell
+$ cargo doc --open --features dynamic
 ```
 

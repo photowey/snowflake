@@ -29,8 +29,6 @@ use crate::infras;
 
 // ----------------------------------------------------------------
 
-// ----------------------------------------------------------------
-
 /// [`SnowflakeError`] Snowflake custom enum error.
 #[derive(Debug, Clone)]
 pub enum SnowflakeError {
@@ -192,10 +190,12 @@ impl SnowflakeGenerator {
     /// Constructs a new [`SnowflakeGenerator`] instance.
     ///
     /// # Arguments
+    ///
     /// - `center_id`: An identifier for the data-center, represented as a `u64`. It must be within the defined maximum limit.
     /// - `worker_id`: An identifier for the worker node within the data-center, also represented as a `u64`. This too must not exceed its predefined maximum value.
-
+    ///
     /// # Returns
+    ///
     /// - `Ok(Self)`: If both `center_id` and `worker_id` are valid, returns a new [`SnowflakeGenerator`] instance.
     /// - `Err(SnowflakeError)`: If either `center_id` or `worker_id` is invalid, returns an error.
     ///
@@ -289,7 +289,7 @@ impl Generator for SnowflakeGenerator {
         Ok(id)
     }
 
-    /// [`time_gen`] get current timestamp
+    /// [`time_gen`] Get current timestamp
     fn time_gen() -> Result<u64, SnowflakeError> {
         match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(now) => Ok(now.as_millis() as u64),
@@ -297,7 +297,7 @@ impl Generator for SnowflakeGenerator {
         }
     }
 
-    /// [`til_next_millis`] get next timestamp
+    /// [`til_next_millis`] Get next timestamp
     fn til_next_millis(last_timestamp: u64) -> Result<u64, SnowflakeError> {
         let mut next = Self::time_gen().unwrap();
         while next <= last_timestamp {
