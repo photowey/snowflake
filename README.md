@@ -12,12 +12,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-snowflaker = "0.2"
+snowflaker = "0.3"
 
 # Or
 # @see SnowflakeGenerator::dynamic()
-snowflaker = { version = "0.2", features = ["dynamic"] }
+snowflaker = { version = "0.3", features = ["dynamic"] }
 ```
+
+-- -
 
 ## 2.`APIs`
 
@@ -58,6 +60,8 @@ let rvt = gen.unwrap().next_id();
 assert!(rvt.is_ok());
 ```
 
+-- -
+
 ### 2.2.`Functions`
 
 #### 2.2.1.`next_id`
@@ -76,6 +80,8 @@ let rvt = snowflaker::next_id_string();
 assert!(rvt.is_ok());
 ```
 
+-- -
+
 ### 2.3.`Custom`
 
 - `data-center` `ID`
@@ -91,6 +97,8 @@ let rvt = gen.unwrap().next_id();
 assert!(rvt.is_ok());
 ```
 
+-- -
+
 ## 3.`Test`
 
 ### 3.1.`cargo test`
@@ -99,6 +107,8 @@ assert!(rvt.is_ok());
 $ cargo test --features "dynamic" -- --show-output
 $ cargo test --features "dynamic"
 ```
+
+-- -
 
 ## 4.`Docs`
 

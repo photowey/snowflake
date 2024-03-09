@@ -98,21 +98,21 @@ impl Constants {
 
 // ----------------------------------------------------------------
 
-/// [`Generator`] Unique ID generator trait
+/// Unique ID generator trait
 pub trait Generator {
-    /// [`next_id`] Generate next ID.
+    /// Generate next ID.
     fn next_id(&self) -> Result<u64, SnowflakeError>;
 
-    /// [`time_gen`] Get current timestamp.
+    /// Get current timestamp.
     fn time_gen() -> Result<u64, SnowflakeError>;
 
-    /// [`til_next_millis`] Get next timestamp.
+    /// Get next timestamp.
     fn til_next_millis(last_timestamp: u64) -> Result<u64, SnowflakeError>;
 }
 
 // ----------------------------------------------------------------
 
-/// [`SnowflakeGenerator`] The builtin impl of [`Generator`]
+/// The builtin impl of [`Generator`]
 pub struct SnowflakeGenerator {
     center_id: u64,
     worker_id: u64,
@@ -121,12 +121,10 @@ pub struct SnowflakeGenerator {
 }
 
 impl SnowflakeGenerator {
-    /// [`builtin`]
-    ///
     /// Returns a new instance of [`SnowflakeGenerator`] with built-in defaults.
     ///
     /// This function, `builtin`, instantiates a `SnowflakeGenerator` using the predefined constants for
-    /// data-center ID and worker ID. These constants are [`Constants::DEFAULT_DATA_CENTER_ID`] and
+    /// `data-center` ID and `worker` ID. These constants are [`Constants::DEFAULT_DATA_CENTER_ID`] and
     /// [`Constants::DEFAULT_WORKER_ID`] respectively.
     ///
     /// The return type is a `Result` where the success variant contains the initialized
@@ -147,15 +145,13 @@ impl SnowflakeGenerator {
         )
     }
 
-    /// [`dynamic`]
-    ///
     /// Creates a new [`SnowflakeGenerator`] instance with `dynamic` parameters.
     ///
-    /// This function is available when the [`dynamic`] feature is enabled.
+    /// This function is available when the `dynamic` feature is enabled.
     ///
     /// # Errors
     ///
-    /// Returns a [`SnowflakeError`] if the data-center ID or worker ID invalid.
+    /// Returns a [`SnowflakeError`] if the `data-center` ID or `worker` ID invalid.
     ///
     /// # Examples
     ///
@@ -174,7 +170,7 @@ impl SnowflakeGenerator {
     ///
     /// # Notes
     ///
-    /// This function retrieves the data-center ID and worker ID dynamically from the network interface(`non-loopback `).
+    /// This function retrieves the `data-center` ID and `worker` ID dynamically from the network interface(`non-loopback `).
     ///
     /// @since 0.2.0
     #[cfg(feature = "dynamic")]
@@ -185,14 +181,14 @@ impl SnowflakeGenerator {
         SnowflakeGenerator::new(center_id, worker_id)
     }
 
-    /// [`new`]
-    ///
     /// Constructs a new [`SnowflakeGenerator`] instance.
     ///
     /// # Arguments
     ///
-    /// - `center_id`: An identifier for the data-center, represented as a `u64`. It must be within the defined maximum limit.
-    /// - `worker_id`: An identifier for the worker node within the data-center, also represented as a `u64`. This too must not exceed its predefined maximum value.
+    /// - `center_id`: An identifier for the `data-center`, represented as a `u64`.
+    /// It must be within the defined maximum limit.
+    /// - `worker_id`: An identifier for the `worker` node within the `data-center`,
+    /// also represented as a `u64`. This too must not exceed its predefined maximum value.
     ///
     /// # Returns
     ///
@@ -229,10 +225,8 @@ impl SnowflakeGenerator {
 }
 
 impl Generator for SnowflakeGenerator {
-    /// [`next_id`]
-    ///
     /// Generates and returns a unique ID based on the
-    /// current timestamp, data-center ID, worker ID, and an incrementing sequence number.
+    /// current timestamp, `data-center` ID, `worker` ID, and an incrementing sequence number.
     /// It ensures that IDs are strictly increasing and handles potential clock drift or time going backwards.
     ///
     /// ## Return
@@ -289,7 +283,7 @@ impl Generator for SnowflakeGenerator {
         Ok(id)
     }
 
-    /// [`time_gen`] Get current timestamp
+    /// Get current timestamp
     fn time_gen() -> Result<u64, SnowflakeError> {
         match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(now) => Ok(now.as_millis() as u64),
@@ -297,7 +291,7 @@ impl Generator for SnowflakeGenerator {
         }
     }
 
-    /// [`til_next_millis`] Get next timestamp
+    /// Get next timestamp
     fn til_next_millis(last_timestamp: u64) -> Result<u64, SnowflakeError> {
         let mut next = Self::time_gen().unwrap();
         while next <= last_timestamp {

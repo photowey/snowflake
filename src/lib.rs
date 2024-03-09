@@ -24,10 +24,18 @@ use crate::generator::{Generator, SnowflakeError, SnowflakeGenerator};
 
 // ----------------------------------------------------------------
 
+/// @since 0.1.0
 pub mod generator;
+
+/// @since 0.2.0
 pub mod hashcode;
+/// @since 0.2.0
 #[cfg(feature = "dynamic")]
 pub mod infras;
+
+/// @since 0.3.0
+#[macro_use]
+pub mod macros;
 
 #[cfg(test)]
 mod tests;
@@ -36,6 +44,11 @@ mod tests;
 
 lazy_static! {
     static ref BUILT_IN_SNOWFLAKE: Arc<Mutex<Option<SnowflakeGenerator>>> =
+        Arc::new(Mutex::new(None));
+}
+
+lazy_static! {
+    static ref BUILT_IN_SNOWFLAKE_DYNAMIC: Arc<Mutex<Option<SnowflakeGenerator>>> =
         Arc::new(Mutex::new(None));
 }
 
@@ -50,11 +63,20 @@ fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
     Arc::clone(&BUILT_IN_SNOWFLAKE)
 }
 
+#[cfg(feature = "dynamic")]
+fn dynamic_generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
+    let mut instance = BUILT_IN_SNOWFLAKE_DYNAMIC.lock().unwrap();
+    if instance.is_none() {
+        *instance = Some(SnowflakeGenerator::dynamic().unwrap());
+    }
+
+    Arc::clone(&BUILT_IN_SNOWFLAKE_DYNAMIC)
+}
+
 // ----------------------------------------------------------------
 
-/// [`next_id`]
-///
-/// Generates and returns a unique ID based on the [`Generator::next_id`] function.
+/// Use builtin default [`Generator`] `impl` instance [`SnowflakeGenerator::builtin`]
+/// generates and returns a unique ID based on the [`Generator::next_id`] function.
 ///
 /// ## Return
 ///
@@ -75,9 +97,8 @@ pub fn next_id() -> Result<u64, SnowflakeError> {
     generator().lock().unwrap().as_ref().unwrap().next_id()
 }
 
-/// [`next_id_string`]
-///
-/// Generates and returns a unique String ID.
+/// Use builtin default [`Generator`] `impl` instance [`SnowflakeGenerator::builtin`]
+/// generates and returns a unique String ID.
 ///
 /// ## Return
 ///
@@ -96,4 +117,52 @@ pub fn next_id() -> Result<u64, SnowflakeError> {
 /// ```
 pub fn next_id_string() -> Result<String, SnowflakeError> {
     next_id().map(|v| v.to_string())
+}
+
+// ----------------------------------------------------------------
+
+/// Use builtin default [`Generator`] `impl` instance [`SnowflakeGenerator::dynamic`]
+/// generates and returns a unique ID based on the [`Generator::next_id`] function.
+///
+/// ## Return
+///
+/// Returns a `Result<u64, SnowflakeError>` where:
+///
+/// - `Ok(u64)`: Represents a successfully generated unique ID.
+/// - `Err(SnowflakeError)`: Indicates an error occurred, such as the system clock moved backwards.
+///
+/// # Examples
+///
+/// ```rust
+/// use snowflaker::dynamic_next_id;
+///
+/// let rvt = dynamic_next_id();
+/// assert!(rvt.is_ok());
+/// ```
+#[cfg(feature = "dynamic")]
+pub fn dynamic_next_id() -> Result<u64, SnowflakeError> {
+    dynamic_generator().lock().unwrap().as_ref().unwrap().next_id()
+}
+
+/// Use builtin default [`Generator`] `impl` instance [`SnowflakeGenerator::dynamic`]
+/// generates and returns a unique String ID.
+///
+/// ## Return
+///
+/// Returns a `Result<u64, SnowflakeError>` where:
+///
+/// - `Ok(u64)`: Represents a successfully generated unique ID.
+/// - `Err(SnowflakeError)`: Indicates an error occurred, such as the system clock moved backwards.
+///
+/// # Examples
+///
+/// ```rust
+/// use snowflaker::dynamic_next_id_string;
+///
+/// let rvt = dynamic_next_id_string();
+/// assert!(rvt.is_ok());
+/// ```
+#[cfg(feature = "dynamic")]
+pub fn dynamic_next_id_string() -> Result<String, SnowflakeError> {
+    dynamic_next_id().map(|v| v.to_string())
 }

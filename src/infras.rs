@@ -16,7 +16,7 @@
 
 // ----------------------------------------------------------------
 
-//! [`infras`] - feature = [`dynamic`]
+//! Notes: features = [`"dynamic"`]
 
 // ----------------------------------------------------------------
 
@@ -34,7 +34,7 @@ const LOOPBACK: &str = "Loopback";
 
 // ----------------------------------------------------------------
 
-/// [`InterfaceError`]
+/// Interface errors
 ///
 /// @since 0.2.0
 #[derive(Debug)]
@@ -56,7 +56,7 @@ impl Error for InterfaceError {}
 
 // ----------------------------------------------------------------
 
-/// [`try_get_worker_id`]
+/// Get the `worker` ID by given center ID
 ///
 /// # Examples
 ///
@@ -80,7 +80,7 @@ pub fn try_get_worker_id(center_id: u64) -> u64 {
 
 // ----------------------------------------------------------------
 
-/// [`try_get_data_center_id`]
+/// Get the `data-center` ID by network interface(`non-loopback`) on the local host
 ///
 /// # Examples
 ///
@@ -109,8 +109,6 @@ pub fn try_get_data_center_id() -> u64 {
     id & Constants::MAX_DATA_CENTER_ID
 }
 
-/// [`try_get_local_first_non_loopback_interface`]
-///
 /// Attempts to retrieve the MAC address of the first non-loopback network interface on the local host.
 ///
 /// This function queries the system's network interface configuration and returns the MAC address
