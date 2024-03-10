@@ -31,7 +31,6 @@ pub mod generator;
 pub mod hashcode;
 /// @since 0.2.0
 #[cfg(feature = "dynamic")]
-#[cfg_attr(docsrs, doc(cfg(feature = "dynamic")))]
 pub mod infras;
 
 /// @since 0.3.0
