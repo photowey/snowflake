@@ -38,6 +38,7 @@ macro_rules! snowflake_builtin_string {
 ///
 #[macro_export]
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 macro_rules! snowflake_dynamic {
     () => {
         dynamic_next_id()
@@ -47,6 +48,7 @@ macro_rules! snowflake_dynamic {
 /// Use the builtin dynamic generator[`crate::generator::SnowflakeGenerator::dynamic`] by features = [`"dynamic"`].
 #[macro_export]
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 macro_rules! snowflake_dynamic_string {
     () => {
         dynamic_next_id_string()
