@@ -1,6 +1,6 @@
 [package]
 name = "snowflaker"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 
 authors = ["photowey <photowey@gmail.com>"]
@@ -30,5 +30,3 @@ dynamic = []
 
 [package.metadata.docs.rs]
 features = ["dynamic"]
-
-rustdoc-args = ["--features", "dynamic"]
