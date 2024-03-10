@@ -1,0 +1,54 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install 1.76
+        run: rustup install 1.76
+
+      - name: Set default toolchain
+        run: rustup default 1.76
+
+      - name: Install cargo-make
+        run: cargo install cargo-make
+
+      - name: Build and deploy documentation
+        run: cargo make --makefile=Makefile.toml docs
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Config Git
+        run: |
+          git credential-cache exit
+          git config --global user.email "photowey@gmail.com"
+          git config --global user.name "photowey"
+
+      - name: Clone photowey.github.io Repository
+        run: git clone --branch master --depth 1 git@github.com:photowey/photowey.github.io.git
+
+      - name: Copy snowflake Docs to photowey.github.io/snowflake
+        run: |
+          mkdir -p ./photowey.github.io/snowflake && rm -rf ./photowey.github.io/snowflake/*
+          cp -r ./target/doc/* ./photowey.github.io/snowflake
+
+      - name: Deploy to GitHub Pages
+        run: |
+          cd photowey.github.io
+          git add .
+          git commit -m "Update snowflake Docs"
+          git push git@github.com:photowey/photowey.github.io.git HEAD:master

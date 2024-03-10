@@ -59,40 +59,40 @@ impl Error for SnowflakeError {}
 pub struct Constants;
 
 impl Constants {
-    /// [`EPOCH`] `2023-04-05 06:07:08`
+    /// `EPOCH` `2023-04-05 06:07:08`
     pub const EPOCH: u64 = 1680646028000; // 2023-04-05 06:07:08
 
-    /// [`DATA_CENTER_ID_BITS`] data-center bits: 5
+    /// `DATA_CENTER_ID_BITS` data-center bits: 5
     pub const DATA_CENTER_ID_BITS: u64 = 5;
-    /// [`WORKER_ID_BITS`] worker bits: 5
+    /// `WORKER_ID_BITS` worker bits: 5
     pub const WORKER_ID_BITS: u64 = 5;
 
-    /// [`SEQUENCE_BITS`] sequence bits: 12
+    /// `SEQUENCE_BITS` sequence bits: 12
     pub const SEQUENCE_BITS: u64 = 12;
 
-    /// [`MAX_DATA_CENTER_ID`] max data-center ID: 31
+    /// `MAX_DATA_CENTER_ID` max data-center ID: 31
     pub const MAX_DATA_CENTER_ID: u64 = !(!0 << Constants::DATA_CENTER_ID_BITS);
-    /// [`SEQUENCE_MASK`] max worker ID: 31
+    /// `SEQUENCE_MASK` max worker ID: 31
     pub const MAX_WORKER_ID: u64 = !(!0 << Constants::WORKER_ID_BITS);
 
-    /// [`SEQUENCE_MASK`] sequence mask: 4095
+    /// `SEQUENCE_MASK` sequence mask: 4095
     pub const SEQUENCE_MASK: u64 = !(!0 << Constants::SEQUENCE_BITS);
 
-    /// [`WORKER_ID_SHIFT`] worker ID shift: 12
+    /// `WORKER_ID_SHIFT` worker ID shift: 12
     pub const WORKER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS;
-    /// [`CENTER_ID_SHIFT`] center ID shift: 17
+    /// `CENTER_ID_SHIFT` center ID shift: 17
     pub const CENTER_ID_SHIFT: u64 = Constants::SEQUENCE_BITS + Constants::WORKER_ID_BITS;
 
-    /// [`TIMESTAMP_SHIFT`] timestamp left shift: 22
+    /// `TIMESTAMP_SHIFT` timestamp left shift: 22
     pub const TIMESTAMP_SHIFT: u64 =
         Constants::DATA_CENTER_ID_BITS + Constants::WORKER_ID_BITS + Constants::SEQUENCE_BITS;
 
     // ----------------------------------------------------------------
 
-    /// [`DEFAULT_DATA_CENTER_ID`] default data-center ID: 1
+    /// `DEFAULT_DATA_CENTER_ID` default data-center ID: 1
     pub const DEFAULT_DATA_CENTER_ID: u64 = 1;
 
-    /// [`DEFAULT_WORKER_ID`] default worker ID: 1
+    /// `DEFAULT_WORKER_ID` default worker ID: 1
     pub const DEFAULT_WORKER_ID: u64 = 1;
 }
 

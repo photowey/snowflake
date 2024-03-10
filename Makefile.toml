@@ -1,0 +1,4 @@
+[tasks.docs]
+install_crate_deps = true
+command = "cargo"
+args = ["doc", "--features", "dynamic"]
