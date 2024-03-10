@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+// error[E0554]: `#![feature]` may not be used on the stable release channel
+// #![feature(doc_cfg)]
+
 // ----------------------------------------------------------------
 
 use std::sync::{Arc, Mutex};
@@ -31,6 +34,7 @@ pub mod generator;
 pub mod hashcode;
 /// @since 0.2.0
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 pub mod infras;
 
 /// @since 0.3.0
@@ -64,6 +68,7 @@ fn generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
 }
 
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 fn dynamic_generator() -> Arc<Mutex<Option<SnowflakeGenerator>>> {
     let mut instance = BUILT_IN_SNOWFLAKE_DYNAMIC.lock().unwrap();
     if instance.is_none() {
@@ -140,6 +145,7 @@ pub fn next_id_string() -> Result<String, SnowflakeError> {
 /// assert!(rvt.is_ok());
 /// ```
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 pub fn dynamic_next_id() -> Result<u64, SnowflakeError> {
     dynamic_generator().lock().unwrap().as_ref().unwrap().next_id()
 }
@@ -163,6 +169,7 @@ pub fn dynamic_next_id() -> Result<u64, SnowflakeError> {
 /// assert!(rvt.is_ok());
 /// ```
 #[cfg(feature = "dynamic")]
+#[doc(cfg(feature = "dynamic"))]
 pub fn dynamic_next_id_string() -> Result<String, SnowflakeError> {
     dynamic_next_id().map(|v| v.to_string())
 }
