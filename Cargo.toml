@@ -30,3 +30,5 @@ dynamic = []
 
 [package.metadata.docs.rs]
 features = ["dynamic"]
+
+rustdoc-args = ["--features", "dynamic"]
