@@ -110,10 +110,9 @@ fn test_macro_snowflake_builtin_string() {
 #[cfg(test)]
 #[cfg(feature = "dynamic")]
 mod feature_dynamic_tests {
+    use crate::{dynamic_next_id, dynamic_next_id_string, infras};
     // @since 0.3.0
-    use crate::{dynamic_next_id, dynamic_next_id_string};
-    use crate::generator::{Constants, Generator, SnowflakeGenerator};
-    use crate::infras;
+        use crate::generator::{Constants, Generator, SnowflakeGenerator};
 
     #[test]
     fn test_try_get_data_center_id() {
