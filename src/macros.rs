@@ -21,7 +21,7 @@
 #[macro_export]
 macro_rules! snowflake_builtin {
     () => {
-        next_id()
+        $crate::next_id()
     };
 }
 
@@ -30,7 +30,7 @@ macro_rules! snowflake_builtin {
 #[macro_export]
 macro_rules! snowflake_builtin_string {
     () => {
-        next_id_string()
+        $crate::next_id_string()
     };
 }
 
@@ -40,7 +40,7 @@ macro_rules! snowflake_builtin_string {
 #[cfg(feature = "dynamic")]
 macro_rules! snowflake_dynamic {
     () => {
-        dynamic_next_id()
+        $crate::dynamic_next_id()
     };
 }
 
@@ -49,6 +49,6 @@ macro_rules! snowflake_dynamic {
 #[cfg(feature = "dynamic")]
 macro_rules! snowflake_dynamic_string {
     () => {
-        dynamic_next_id_string()
+        $crate::dynamic_next_id_string()
     };
 }

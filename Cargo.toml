@@ -1,6 +1,6 @@
 [package]
 name = "snowflaker"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
 
 authors = ["photowey <photowey@gmail.com>"]
@@ -28,5 +28,9 @@ ifcfg = "0.1"
 [features]
 dynamic = []
 
+# https://docs.rs/about/metadata
 [package.metadata.docs.rs]
+features = ["dynamic"]
+
+[package.metadata.loccal.rs]
 features = ["dynamic"]
