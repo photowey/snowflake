@@ -110,9 +110,11 @@ fn test_macro_snowflake_builtin_string() {
 #[cfg(test)]
 #[cfg(feature = "dynamic")]
 mod feature_dynamic_tests {
+    use std::thread;
+
     use crate::{dynamic_next_id, dynamic_next_id_string, infras};
     // @since 0.3.0
-        use crate::generator::{Constants, Generator, SnowflakeGenerator};
+    use crate::generator::{Constants, Generator, SnowflakeGenerator};
 
     #[test]
     fn test_try_get_data_center_id() {
@@ -159,6 +161,39 @@ mod feature_dynamic_tests {
     fn test_macro_snowflake_dynamic_string() {
         let rvt = snowflake_dynamic_string!();
         assert!(rvt.is_ok());
+    }
+
+    // ---------------------------------------------------------------- multi-thread
+    #[test]
+    fn test_multi_thread_sequence() {
+        let generator = SnowflakeGenerator::builtin().unwrap();
+        let generator_clone = generator.clone();
+
+        assert_eq!(generator.get_sequence(), 0);
+        assert_eq!(generator_clone.get_sequence(), 0);
+
+        let h1 = thread::spawn(move || {
+            for _ in 0..10 {
+                generator_clone.set_sequence(generator_clone.get_sequence() + 1);
+                // println!("h1: {}", generator_clone.get_sequence())
+            }
+        });
+
+        let generator_clone = generator.clone();
+        let h2 = thread::spawn(move || {
+            for _ in 0..10 {
+                generator_clone.set_sequence(generator_clone.get_sequence() + 1);
+                // println!("h2: {}", generator_clone.get_sequence())
+            }
+        });
+
+        h1.join().unwrap();
+        h2.join().unwrap();
+
+        assert_eq!(20, generator.get_sequence());
+
+        // value borrowed here after move
+        //assert_eq!(20, generator_clone.get_sequence());
     }
 }
 
