@@ -19,6 +19,7 @@
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -60,7 +61,7 @@ pub struct Constants;
 
 impl Constants {
     /// `EPOCH` `2023-04-05 06:07:08`
-    pub const EPOCH: u64 = 1680646028000; // 2023-04-05 06:07:08
+    pub const EPOCH: u64 = 1680646028000;
 
     /// `DATA_CENTER_ID_BITS` data-center bits: 5
     pub const DATA_CENTER_ID_BITS: u64 = 5;
@@ -113,11 +114,115 @@ pub trait Generator {
 // ----------------------------------------------------------------
 
 /// The builtin impl of [`Generator`]
+#[derive(Clone, Debug)] // @since 0.3.6
 pub struct SnowflakeGenerator {
     center_id: u64,
     worker_id: u64,
-    sequence: AtomicU64,
-    last_timestamp: AtomicU64,
+    /// issue#https:///github.com/photowey/snowflake/issues/16
+    ///
+    /// ### planA
+    /// `AtomicU64` wrapped by `Arc<T>`
+    /// |- Support multi-thread
+    /// |- -> Ok
+    ///
+    /// ```rust
+    /// use std::sync::Arc;
+    /// use std::sync::atomic::AtomicU64;
+    ///
+    /// #[derive(Clone, Debug)]
+    /// pub struct SnowflakeGenerator {
+    ///     center_id: u64,
+    ///     worker_id: u64,
+    ///     sequence: Arc<AtomicU64>,
+    ///     last_timestamp: Arc<AtomicU64>,
+    /// }
+    /// ```
+    ///
+    /// ### planB
+    /// Customize the struct `CloneableAtomicU64` for the [`Clone`] trait
+    /// |- `CloneableAtomicU64` does not support multi-thread
+    /// |- -> PASS
+    ///
+    /// ```rust
+    /// use std::sync::atomic::{AtomicU64, Ordering};
+    ///
+    /// #[derive(Debug)]
+    /// struct CloneableAtomicU64(AtomicU64);
+    ///
+    /// impl Clone for CloneableAtomicU64 {
+    ///     fn clone(&self) -> Self {
+    ///         CloneableAtomicU64(AtomicU64::new(self.0.load(Ordering::SeqCst)))
+    ///     }
+    /// }
+    ///
+    /// impl CloneableAtomicU64 {
+    ///     fn new(value: u64) -> Self {
+    ///         CloneableAtomicU64(AtomicU64::new(value))
+    ///     }
+    ///
+    ///     fn load(&self, ordering: Ordering) -> u64 {
+    ///         self.0.load(ordering)
+    ///     }
+    ///
+    ///     fn store(&self, value: u64, ordering: Ordering) {
+    ///         self.0.store(value, ordering)
+    ///     }
+    /// }
+    ///
+    /// #[derive(Debug)]
+    /// struct SnowflakeGenerator {
+    ///     center_id: u64,
+    ///     worker_id: u64,
+    ///     sequence: CloneableAtomicU64,
+    ///     last_timestamp: CloneableAtomicU64,
+    /// }
+    ///
+    /// impl Clone for SnowflakeGenerator {
+    ///     fn clone(&self) -> Self {
+    ///         Self {
+    ///             center_id: self.center_id,
+    ///             worker_id: self.worker_id,
+    ///             // clone: Will be relatively independent
+    ///             sequence: self.sequence.clone(),
+    ///             last_timestamp: self.last_timestamp.clone(),
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// @since 0.3.6
+    ///
+    sequence: Arc<AtomicU64>,
+    last_timestamp: Arc<AtomicU64>,
+}
+
+// @since 0.3.6
+// `Getter` & `Setter` for `sequence` & `last_timestamp`
+impl SnowflakeGenerator {
+    fn increment_sequence(&self) -> u64 {
+        self.sequence.fetch_add(1, Ordering::SeqCst)
+    }
+
+    //
+    // ---------------------------------------------------------------- getter/setter
+    //
+
+    #[allow(dead_code)]
+    pub(crate) fn get_sequence(&self) -> u64 {
+        self.sequence.load(Ordering::SeqCst)
+    }
+
+    pub(crate) fn set_sequence(&self, value: u64) {
+        self.sequence.store(value, Ordering::SeqCst)
+    }
+
+    fn get_last_timestamp(&self) -> u64 {
+        self.last_timestamp.load(Ordering::SeqCst)
+    }
+
+    fn set_last_timestamp(&self, value: u64) {
+        self.last_timestamp.store(value, Ordering::SeqCst)
+    }
 }
 
 impl SnowflakeGenerator {
@@ -218,8 +323,8 @@ impl SnowflakeGenerator {
         Ok(SnowflakeGenerator {
             center_id,
             worker_id,
-            sequence: AtomicU64::new(0),
-            last_timestamp: AtomicU64::new(0),
+            sequence: Arc::new(AtomicU64::new(0)),
+            last_timestamp: Arc::new(AtomicU64::new(0)),
         })
     }
 }
@@ -247,7 +352,7 @@ impl Generator for SnowflakeGenerator {
     /// ```
     fn next_id(&self) -> Result<u64, SnowflakeError> {
         let mut timestamp = Self::time_gen().unwrap();
-        let last_timestamp = self.last_timestamp.load(Ordering::Relaxed);
+        let last_timestamp = self.get_last_timestamp();
 
         if timestamp < last_timestamp {
             let delta = last_timestamp - timestamp;
@@ -261,7 +366,7 @@ impl Generator for SnowflakeGenerator {
             }
         }
 
-        let mut sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
+        let mut sequence = self.increment_sequence();
 
         if timestamp == last_timestamp {
             sequence = (sequence + 1) & Constants::SEQUENCE_MASK;
@@ -272,8 +377,8 @@ impl Generator for SnowflakeGenerator {
             sequence &= Constants::SEQUENCE_MASK;
         }
 
-        self.sequence.store(sequence, Ordering::Relaxed);
-        self.last_timestamp.store(timestamp, Ordering::Relaxed);
+        self.set_sequence(sequence);
+        self.set_last_timestamp(timestamp);
 
         let id = ((timestamp - Constants::EPOCH) << Constants::TIMESTAMP_SHIFT)
             | (self.center_id << Constants::CENTER_ID_SHIFT)
